@@ -1,0 +1,10 @@
+.git
+.gitignore
+.dockerignore
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+Django_Course_Notes_Notion.md
+Library_API_ED.docx
