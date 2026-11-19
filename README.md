@@ -125,9 +125,16 @@ Detailed endpoint documentation will be available through the OpenAPI documentat
 
 ## API Documentation
 
-OpenAPI documentation is generated using `drf-spectacular`.
+OpenAPI documentation is generated using `drf-spectacular`. With the application running:
 
-Once configured, the API schema and interactive documentation will be available through the application.
+- Interactive Swagger UI: <http://localhost:8000/api/docs/>
+- OpenAPI schema: <http://localhost:8000/api/schema/>
+
+Validate the generated schema with Docker Compose:
+
+```bash
+docker compose run --rm app sh -c "python manage.py spectacular --validate"
+```
 
 ## Library Fixture
 

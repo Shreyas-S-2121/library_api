@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'drf_spectacular',
     'core',
     'books',
     'borrowers',
@@ -86,6 +88,19 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASS'),
 
     }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Library Management API',
+    'DESCRIPTION': (
+        'Manage library books and availability, borrowers, and book '
+        'borrowings and returns.'
+    ),
+    'VERSION': '1.0.0',
 }
 
 
