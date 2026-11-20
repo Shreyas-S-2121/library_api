@@ -1,3 +1,11 @@
-from django.shortcuts import render
+from rest_framework import generics
 
-# Create your views here.
+from core.models import Borrower
+from borrowers.serializers import BorrowerSerializer
+
+
+class BorrowerListCreateView(generics.ListCreateAPIView):
+    """List borrowers or create a borrower."""
+
+    queryset = Borrower.objects.all()
+    serializer_class = BorrowerSerializer
