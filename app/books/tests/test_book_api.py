@@ -1,8 +1,10 @@
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from core.models import Book
+from core.models import Borrower, Borrowing
 
 
 def books_url():
@@ -89,6 +91,87 @@ class BookListAPITests(APITestCase):
         book_ids = [book['id'] for book in response.data]
         self.assertEqual(book_ids, [matching_book.id])
 
+    def test_list_books_filters_by_availability(self):
+        """Test true and false availability filters."""
+        available_book = create_book(
+            title='Available Book',
+            total_quantity=2,
+        )
+        unavailable_book = create_book(
+            title='Unavailable Book',
+            total_quantity=1,
+        )
+        zero_quantity_book = create_book(
+            title='Empty Book',
+            total_quantity=0,
+        )
+        borrower = Borrower.objects.create(
+            name='John Doe',
+            email='john@example.com',
+        )
+        Borrowing.objects.create(book=unavailable_book, borrower=borrower)
+
+        for value, expected_ids in (
+            ('true', [available_book.id]),
+            ('false', [unavailable_book.id, zero_quantity_book.id]),
+        ):
+            with self.subTest(available=value):
+                response = self.client.get(
+                    books_url(),
+                    {'available': value},
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertCountEqual(
+                    [item['id'] for item in response.data],
+                    expected_ids,
+                )
+
+    def test_list_books_combines_availability_with_title_and_author(self):
+        """Test availability combines with the exact title/author filters."""
+        target_book = create_book(total_quantity=1)
+        create_book(
+            title='Clean Code',
+            author='Another Author',
+            total_quantity=2,
+        )
+        create_book(
+            title='Another Book',
+            total_quantity=2,
+        )
+        borrower = Borrower.objects.create(
+            name='John Doe',
+            email='john@example.com',
+        )
+        Borrowing.objects.create(book=target_book, borrower=borrower)
+
+        for value, expected_ids in (
+            ('true', []),
+            ('false', [target_book.id]),
+        ):
+            with self.subTest(available=value):
+                response = self.client.get(
+                    books_url(),
+                    {
+                        'title': 'Clean Code',
+                        'author': 'Robert C. Martin',
+                        'available': value,
+                    },
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(
+                    [item['id'] for item in response.data],
+                    expected_ids,
+                )
+
+    def test_list_books_rejects_invalid_availability(self):
+        """Test an invalid availability value returns 400."""
+        response = self.client.get(books_url(), {'available': 'maybe'})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['detail'],
+            'available must be either true or false.',
+        )
 
     def test_create_book(self):
         """Test creating a book returns the ED write-response fields."""
@@ -114,6 +197,7 @@ class BookListAPITests(APITestCase):
                 'total_quantity': payload['total_quantity'],
             },
         )
+        self.assertEqual(book.total_quantity, payload['total_quantity'])
 
     def test_create_book_with_zero_quantity(self):
         """Test that creating a book with zero copies succeeds."""
@@ -128,6 +212,11 @@ class BookListAPITests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        book = Book.objects.get(
+            title='Clean Code',
+            author='Robert C. Martin',
+        )
+        self.assertEqual(book.total_quantity, 0)
 
     def test_create_book_requires_all_fields(self):
         """Test title, author, and total quantity are required."""
@@ -193,6 +282,21 @@ class BookListAPITests(APITestCase):
                     status.HTTP_400_BAD_REQUEST,
                 )
                 self.assertIn('total_quantity', response.data)
+
+    def test_create_book_rejects_fractional_quantity(self):
+        """Test total quantity does not accept a fractional number."""
+        response = self.client.post(
+            books_url(),
+            {
+                'title': 'Clean Code',
+                'author': 'Robert C. Martin',
+                'total_quantity': 1.5,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('total_quantity', response.data)
 
     def test_create_duplicate_title_and_author_returns_conflict(self):
         """Test a duplicate title/author pair returns HTTP 409."""
@@ -387,3 +491,92 @@ class BookDetailAPITests(APITestCase):
             response.status_code,
             status.HTTP_405_METHOD_NOT_ALLOWED,
         )
+
+    def test_availability_counts_only_active_borrowings(self):
+        """Test active loans affect availability in list and detail."""
+        book = create_book(total_quantity=3)
+        active_borrower = Borrower.objects.create(
+            name='John Doe',
+            email='john@example.com',
+        )
+        returned_borrower = Borrower.objects.create(
+            name='Jane Doe',
+            email='jane@example.com',
+        )
+        Borrowing.objects.create(book=book, borrower=active_borrower)
+        Borrowing.objects.create(
+            book=book,
+            borrower=returned_borrower,
+            returned_at=timezone.now(),
+        )
+
+        list_response = self.client.get(books_url())
+        detail_response = self.client.get(book_detail_url(book.id))
+
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        listed_book = next(
+            item for item in list_response.data if item['id'] == book.id
+        )
+        self.assertEqual(listed_book['available_quantity'], 2)
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail_response.data['available_quantity'], 2)
+
+    def test_quantity_cannot_fall_below_active_borrowings(self):
+        """Test quantity cannot drop below, but may equal, active loans."""
+        book = create_book(total_quantity=2)
+        borrowers = (
+            Borrower.objects.create(name='John Doe', email='john@example.com'),
+            Borrower.objects.create(name='Jane Doe', email='jane@example.com'),
+        )
+        for borrower in borrowers:
+            Borrowing.objects.create(book=book, borrower=borrower)
+
+        response = self.client.patch(
+            book_detail_url(book.id),
+            {'total_quantity': 1},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        book.refresh_from_db()
+        self.assertEqual(book.total_quantity, 2)
+
+        response = self.client.patch(
+            book_detail_url(book.id),
+            {'total_quantity': 2},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        book.refresh_from_db()
+        self.assertEqual(book.total_quantity, 2)
+
+    def test_delete_with_active_or_returned_borrowing_returns_conflict(self):
+        """Test either type of borrowing history protects a Book."""
+        histories = (
+            ('Active Book', 'john@example.com', None),
+            ('Returned Book', 'jane@example.com', timezone.now()),
+        )
+        for title, email, returned_at in histories:
+            with self.subTest(returned=returned_at is not None):
+                book = create_book(title=title, total_quantity=1)
+                borrower = Borrower.objects.create(
+                    name='Jane Doe',
+                    email=email,
+                )
+                borrowing = Borrowing.objects.create(
+                    book=book,
+                    borrower=borrower,
+                    returned_at=returned_at,
+                )
+
+                response = self.client.delete(book_detail_url(book.id))
+
+                self.assertEqual(
+                    response.status_code,
+                    status.HTTP_409_CONFLICT,
+                )
+                self.assertTrue(Book.objects.filter(pk=book.id).exists())
+                self.assertTrue(
+                    Borrowing.objects.filter(pk=borrowing.id).exists(),
+                )
