@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from core.models import Book
+from core.models import Book, Borrowing
 
 
 class BookConflict(APIException):
@@ -18,10 +18,16 @@ class BookConflict(APIException):
 class BookReadSerializer(serializers.ModelSerializer):
     """Serializer for book response data."""
 
-    available_quantity = serializers.IntegerField(
-        source='total_quantity',
-        read_only=True,
-    )
+    #declare available_quantity field (as its not part of model)
+    available_quantity = serializers.SerializerMethodField()
+
+    def get_available_quantity(self, obj):  #get the fields value
+        """Return copies not currently borrowed."""
+        active_borrowings = Borrowing.objects.filter(
+            book=obj,
+            returned_at__isnull=True,
+        ).count()
+        return obj.total_quantity - active_borrowings   #available_quantity of current book
 
     class Meta:
         model = Book

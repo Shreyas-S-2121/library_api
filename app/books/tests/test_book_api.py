@@ -493,7 +493,7 @@ class BookDetailAPITests(APITestCase):
         )
 
     def test_availability_counts_only_active_borrowings(self):
-        """Test active loans affect availability in list and detail."""
+        """Test active borrowings affect availability in list and detail."""
         book = create_book(total_quantity=3)
         active_borrower = Borrower.objects.create(
             name='John Doe',
