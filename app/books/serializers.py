@@ -1,19 +1,17 @@
 from rest_framework import serializers
-from rest_framework.exceptions import APIException
 
 from books.models import Book
 from borrowings.models import Borrowing
+from exceptions import ConflictAPIException
 
 
-class BookConflict(APIException):
+class BookConflict(ConflictAPIException):
     """Conflict raised when a title/author pair is already in use.
 
     DRF returns 400 for validation errors by default. ED stated
     409 Conflict for duplicates, so we raise this custom exception.
     """
-    status_code = 409
     default_detail = 'A book with this title and author already exists.'
-    default_code = 'conflict'
 
 
 class BookReadSerializer(serializers.ModelSerializer):
