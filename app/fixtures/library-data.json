@@ -1,0 +1,75 @@
+[
+  {
+    "model": "core.book",
+    "pk": 1,
+    "fields": {
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "total_quantity": 2
+    }
+  },
+  {
+    "model": "core.book",
+    "pk": 2,
+    "fields": {
+      "title": "The Pragmatic Programmer",
+      "author": "Andrew Hunt and David Thomas",
+      "total_quantity": 1
+    }
+  },
+  {
+    "model": "core.book",
+    "pk": 3,
+    "fields": {
+      "title": "Zero Stock Example",
+      "author": "Library Demo",
+      "total_quantity": 0
+    }
+  },
+  {
+    "model": "core.borrower",
+    "pk": 1,
+    "fields": {
+      "name": "Alex Reader",
+      "email": "alex.reader@example.com"
+    }
+  },
+  {
+    "model": "core.borrower",
+    "pk": 2,
+    "fields": {
+      "name": "Sam Reader",
+      "email": "sam.reader@example.com"
+    }
+  },
+  {
+    "model": "core.borrowing",
+    "pk": 1,
+    "fields": {
+      "book": 1,
+      "borrower": 1,
+      "borrowed_at": "2025-11-10T10:00:00Z",
+      "returned_at": null
+    }
+  },
+  {
+    "model": "core.borrowing",
+    "pk": 2,
+    "fields": {
+      "book": 1,
+      "borrower": 1,
+      "borrowed_at": "2025-10-01T10:00:00Z",
+      "returned_at": "2025-10-15T10:00:00Z"
+    }
+  },
+  {
+    "model": "core.borrowing",
+    "pk": 3,
+    "fields": {
+      "book": 2,
+      "borrower": 2,
+      "borrowed_at": "2025-11-12T10:00:00Z",
+      "returned_at": null
+    }
+  }
+]
