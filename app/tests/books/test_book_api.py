@@ -4,8 +4,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from books.models import Book
-from borrowers.models import Borrower
 from borrowings.models import Borrowing
+from tests.helpers import create_book, create_borrower, create_borrowing
 
 
 def books_url():
@@ -16,18 +16,6 @@ def books_url():
 def book_detail_url(book_id):
     """Return the URL for a book detail endpoint."""
     return reverse('books:book-detail', args=[book_id])
-
-
-def create_book(**params):
-    """Create and return a sample book."""
-    data = {
-        'title': 'Clean Code',
-        'author': 'Robert C. Martin',
-        'total_quantity': 5,
-    }
-    data.update(params)
-    return Book.objects.create(**data)
-
 
 class BookListAPITests(APITestCase):
     """Tests for listing and creating books."""
@@ -106,11 +94,8 @@ class BookListAPITests(APITestCase):
             title='Empty Book',
             total_quantity=0,
         )
-        borrower = Borrower.objects.create(
-            name='John Doe',
-            email='john@example.com',
-        )
-        Borrowing.objects.create(book=unavailable_book, borrower=borrower)
+        borrower = create_borrower()
+        create_borrowing(unavailable_book, borrower)
 
         for value, expected_ids in (
             ('true', [available_book.id]),
@@ -139,11 +124,8 @@ class BookListAPITests(APITestCase):
             title='Another Book',
             total_quantity=2,
         )
-        borrower = Borrower.objects.create(
-            name='John Doe',
-            email='john@example.com',
-        )
-        Borrowing.objects.create(book=target_book, borrower=borrower)
+        borrower = create_borrower()
+        create_borrowing(target_book, borrower)
 
         for value, expected_ids in (
             ('true', []),
@@ -496,18 +478,15 @@ class BookDetailAPITests(APITestCase):
     def test_availability_counts_only_active_borrowings(self):
         """Test active borrowings affect availability in list and detail."""
         book = create_book(total_quantity=3)
-        active_borrower = Borrower.objects.create(
-            name='John Doe',
-            email='john@example.com',
-        )
-        returned_borrower = Borrower.objects.create(
+        active_borrower = create_borrower()
+        returned_borrower = create_borrower(
             name='Jane Doe',
             email='jane@example.com',
         )
-        Borrowing.objects.create(book=book, borrower=active_borrower)
-        Borrowing.objects.create(
-            book=book,
-            borrower=returned_borrower,
+        create_borrowing(book, active_borrower)
+        create_borrowing(
+            book,
+            returned_borrower,
             returned_at=timezone.now(),
         )
 
@@ -526,11 +505,11 @@ class BookDetailAPITests(APITestCase):
         """Test quantity cannot drop below, but may equal, active loans."""
         book = create_book(total_quantity=2)
         borrowers = (
-            Borrower.objects.create(name='John Doe', email='john@example.com'),
-            Borrower.objects.create(name='Jane Doe', email='jane@example.com'),
+            create_borrower(),
+            create_borrower(name='Jane Doe', email='jane@example.com'),
         )
         for borrower in borrowers:
-            Borrowing.objects.create(book=book, borrower=borrower)
+            create_borrowing(book, borrower)
 
         response = self.client.patch(
             book_detail_url(book.id),
@@ -561,11 +540,11 @@ class BookDetailAPITests(APITestCase):
         for title, email, returned_at in histories:
             with self.subTest(returned=returned_at is not None):
                 book = create_book(title=title, total_quantity=1)
-                borrower = Borrower.objects.create(
+                borrower = create_borrower(
                     name='Jane Doe',
                     email=email,
                 )
-                borrowing = Borrowing.objects.create(
+                borrowing = create_borrowing(
                     book=book,
                     borrower=borrower,
                     returned_at=returned_at,

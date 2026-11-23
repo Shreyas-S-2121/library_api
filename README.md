@@ -90,7 +90,7 @@ docker compose run --rm app sh -c "python manage.py migrate"
 Run all automated tests:
 
 ```bash
-docker compose run --rm app sh -c "python manage.py test"
+docker compose run --rm app sh -c "python manage.py test tests"
 ```
 
 Run Django system checks:
@@ -152,6 +152,10 @@ The fixture uses fixed primary keys to connect its records. Loading it into a
 populated database can update existing records with matching IDs; do not load
 it into a database containing data you want to preserve.
 
+The project restructuring uses fresh resource-app migrations after a
+local-only development database reset. Resetting that database deletes its
+existing data; never reset a shared or deployed database.
+
 ## Useful Commands
 
 ### Create migrations
@@ -169,7 +173,7 @@ docker compose run --rm app sh -c "python manage.py migrate"
 ### Run tests
 
 ```bash
-docker compose run --rm app sh -c "python manage.py test"
+docker compose run --rm app sh -c "python manage.py test tests"
 ```
 
 ### Run linting

@@ -3,21 +3,12 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from borrowers.models import Borrower
+from tests.helpers import create_borrower
 
 
 def borrowers_url():
     """Return the URL for the borrower list and create endpoints."""
     return reverse('borrowers:borrower-list')
-
-
-def create_borrower(**params):
-    """Create and return a sample borrower."""
-    data = {
-        'name': 'John Doe',
-        'email': 'john@example.com',
-    }
-    data.update(params)
-    return Borrower.objects.create(**data)
 
 
 class BorrowerListAPITests(APITestCase):
