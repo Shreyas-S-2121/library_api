@@ -138,13 +138,19 @@ docker compose run --rm app sh -c "python manage.py spectacular --validate"
 
 ## Library Fixture
 
-A sample library-data fixture will be provided to populate the application with development/test data.
+A minimal `library-data` fixture provides 3 books, 2 borrowers, and 3
+borrowings. It includes active and returned history, a fully borrowed book,
+and a zero-quantity book.
 
-Once added, it can be loaded using:
+Load it into a clean database using:
 
 ```bash
-docker compose run --rm app sh -c "python manage.py loaddata <fixture-name>"
+docker compose run --rm app sh -c "python manage.py loaddata library-data"
 ```
+
+The fixture uses fixed primary keys to connect its records. Loading it into a
+populated database can update existing records with matching IDs; do not load
+it into a database containing data you want to preserve.
 
 ## Useful Commands
 
