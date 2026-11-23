@@ -1,1 +1,0 @@
-"""Domain models are defined in their respective resource apps."""
