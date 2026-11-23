@@ -3,19 +3,12 @@ from django.db.models import Count, F, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import ValidationError
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 
-from core.models import Book
+from books.models import Book
 from books.serializers import BookReadSerializer, BookWriteSerializer
-
-
-class BookBorrowingConflict(APIException):
-    """Conflict raised when a requested change violates borrowing rules."""
-
-    status_code = status.HTTP_409_CONFLICT
-    default_detail = 'The requested change conflicts with borrowing records.'
-    default_code = 'conflict'
+from borrowings.exceptions import BookBorrowingConflict
 
 
 #to make the optional filtering query params appear in swagger UI and docs

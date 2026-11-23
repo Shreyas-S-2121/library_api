@@ -1,15 +1,13 @@
 from rest_framework import serializers
-from rest_framework.exceptions import APIException
 
-from core.models import Borrower
+from borrowers.models import Borrower
+from exceptions import ConflictAPIException
 
 
-class BorrowerConflict(APIException):
+class BorrowerConflict(ConflictAPIException):
     """Conflict raised when a borrower email is already in use."""
 
-    status_code = 409
     default_detail = 'A borrower with this email already exists.'
-    default_code = 'conflict'
 
 
 class BorrowerSerializer(serializers.ModelSerializer):

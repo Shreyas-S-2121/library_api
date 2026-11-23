@@ -2,7 +2,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import (
@@ -11,19 +11,13 @@ from drf_spectacular.utils import (
     extend_schema_view,
 )
 
-from core.models import Book, Borrowing
+from books.models import Book
+from borrowings.exceptions import BorrowingConflict
+from borrowings.models import Borrowing
 from borrowings.serializers import (
     BorrowingCreateSerializer,
     BorrowingReadSerializer,
 )
-
-
-class BorrowingConflict(APIException):
-    """Conflict raised when a requested borrowing cannot be completed."""
-
-    status_code = status.HTTP_409_CONFLICT
-    default_detail = 'The borrowing conflicts with the current state.'
-    default_code = 'conflict'
 
 
 @extend_schema_view(

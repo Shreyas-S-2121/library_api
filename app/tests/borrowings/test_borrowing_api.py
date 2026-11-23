@@ -3,7 +3,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from core.models import Book, Borrower, Borrowing
+from borrowings.models import Borrowing
+
+from tests.helpers import create_book, create_borrower, create_borrowing
 
 
 def borrowings_url():
@@ -16,40 +18,12 @@ def borrowing_return_url(borrowing_id):
     return reverse('borrowings:borrowing-return', args=[borrowing_id])
 
 
-def create_book(**params):
-    """Create and return a sample book."""
-    data = {
-        'title': 'Clean Code',
-        'author': 'Robert C. Martin',
-        'total_quantity': 3,
-    }
-    data.update(params)
-    return Book.objects.create(**data)
-
-
-def create_borrower(**params):
-    """Create and return a sample borrower."""
-    data = {
-        'name': 'John Doe',
-        'email': 'john@example.com',
-    }
-    data.update(params)
-    return Borrower.objects.create(**data)
-
-
-def create_borrowing(book, borrower, returned_at=None):
-    """Create and return a borrowing for the given book and borrower."""
-    return Borrowing.objects.create(
-        book=book, borrower=borrower, returned_at=returned_at,
-    )
-
-
 class BorrowingListAPITests(APITestCase):
     """Tests for listing, creating, and returning borrowings."""
 
     def test_list_borrowings_returns_active_and_returned(self):
         """Test the nested list response for active and returned records."""
-        book = create_book()
+        book = create_book(total_quantity=3)
         active_borrower = create_borrower()
         returned_borrower = create_borrower(
             name='Jane Doe',

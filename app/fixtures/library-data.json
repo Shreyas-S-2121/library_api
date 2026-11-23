@@ -1,6 +1,6 @@
 [
   {
-    "model": "core.book",
+    "model": "books.book",
     "pk": 1,
     "fields": {
       "title": "Clean Code",
@@ -9,7 +9,7 @@
     }
   },
   {
-    "model": "core.book",
+    "model": "books.book",
     "pk": 2,
     "fields": {
       "title": "The Pragmatic Programmer",
@@ -18,7 +18,7 @@
     }
   },
   {
-    "model": "core.book",
+    "model": "books.book",
     "pk": 3,
     "fields": {
       "title": "Zero Stock Example",
@@ -27,7 +27,7 @@
     }
   },
   {
-    "model": "core.borrower",
+    "model": "borrowers.borrower",
     "pk": 1,
     "fields": {
       "name": "Alex Reader",
@@ -35,7 +35,7 @@
     }
   },
   {
-    "model": "core.borrower",
+    "model": "borrowers.borrower",
     "pk": 2,
     "fields": {
       "name": "Sam Reader",
@@ -43,7 +43,7 @@
     }
   },
   {
-    "model": "core.borrowing",
+    "model": "borrowings.borrowing",
     "pk": 1,
     "fields": {
       "book": 1,
@@ -53,7 +53,7 @@
     }
   },
   {
-    "model": "core.borrowing",
+    "model": "borrowings.borrowing",
     "pk": 2,
     "fields": {
       "book": 1,
@@ -63,7 +63,7 @@
     }
   },
   {
-    "model": "core.borrowing",
+    "model": "borrowings.borrowing",
     "pk": 3,
     "fields": {
       "book": 2,

@@ -90,7 +90,7 @@ docker compose run --rm app sh -c "python manage.py migrate"
 Run all automated tests:
 
 ```bash
-docker compose run --rm app sh -c "python manage.py test"
+docker compose run --rm app sh -c "python manage.py test tests"
 ```
 
 Run Django system checks:
@@ -169,7 +169,7 @@ docker compose run --rm app sh -c "python manage.py migrate"
 ### Run tests
 
 ```bash
-docker compose run --rm app sh -c "python manage.py test"
+docker compose run --rm app sh -c "python manage.py test tests"
 ```
 
 ### Run linting

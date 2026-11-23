@@ -3,7 +3,9 @@ from rest_framework.exceptions import NotFound
 
 from books.serializers import BookReadSerializer
 from borrowers.serializers import BorrowerSerializer
-from core.models import Book, Borrower, Borrowing
+from books.models import Book
+from borrowers.models import Borrower
+from borrowings.models import Borrowing
 
 
 class BorrowingReadSerializer(serializers.ModelSerializer):
