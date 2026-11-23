@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from core.models import Borrower
+from borrowers.models import Borrower
 
 
 def borrowers_url():

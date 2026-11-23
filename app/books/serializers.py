@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from core.models import Book, Borrowing
+from books.models import Book
+from borrowings.models import Borrowing
 
 
 class BookConflict(APIException):

@@ -3,7 +3,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from core.models import Book, Borrower, Borrowing
+from books.models import Book
+from borrowers.models import Borrower
+from borrowings.models import Borrowing
 
 
 def borrowings_url():

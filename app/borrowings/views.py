@@ -11,7 +11,8 @@ from drf_spectacular.utils import (
     extend_schema_view,
 )
 
-from core.models import Book, Borrowing
+from books.models import Book
+from borrowings.models import Borrowing
 from borrowings.serializers import (
     BorrowingCreateSerializer,
     BorrowingReadSerializer,

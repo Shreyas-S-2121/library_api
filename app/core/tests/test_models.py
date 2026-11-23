@@ -4,7 +4,9 @@ from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 from django.utils import timezone
 
-from core import models
+from books.models import Book
+from borrowers.models import Borrower
+from borrowings.models import Borrowing
 
 
 class BookModelTests(TestCase):
@@ -12,7 +14,7 @@ class BookModelTests(TestCase):
 
     def test_create_book(self):
         """Test creating a book with valid data."""
-        book = models.Book.objects.create(
+        book = Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=5,
@@ -25,7 +27,7 @@ class BookModelTests(TestCase):
 
     def test_create_book_with_zero_quantity(self):
         """Test that a book can have zero total copies."""
-        book = models.Book.objects.create(
+        book = Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=0,
@@ -37,7 +39,7 @@ class BookModelTests(TestCase):
         """Test that the database rejects a negative total quantity."""
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                models.Book.objects.create(
+                Book.objects.create(
                     title='Clean Code',
                     author='Robert C. Martin',
                     total_quantity=-1,
@@ -45,7 +47,7 @@ class BookModelTests(TestCase):
 
     def test_duplicate_title_and_author_are_rejected(self):
         """Test that the title and author combination must be unique."""
-        models.Book.objects.create(
+        Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=5,
@@ -53,7 +55,7 @@ class BookModelTests(TestCase):
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                models.Book.objects.create(
+                Book.objects.create(
                     title='Clean Code',
                     author='Robert C. Martin',
                     total_quantity=3,
@@ -61,18 +63,18 @@ class BookModelTests(TestCase):
 
     def test_title_or_author_can_be_reused_in_another_combination(self):
         """Test that only the title and author combination must be unique."""
-        models.Book.objects.create(
+        Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=5,
         )
 
-        same_title = models.Book.objects.create(
+        same_title = Book.objects.create(
             title='Clean Code',
             author='Another Author',
             total_quantity=2,
         )
-        same_author = models.Book.objects.create(
+        same_author = Book.objects.create(
             title='A Different Book',
             author='Robert C. Martin',
             total_quantity=1,
@@ -86,7 +88,7 @@ class BorrowerModelTests(TestCase):
 
     def test_create_borrower(self):
         """Test creating a borrower with valid data."""
-        borrower = models.Borrower.objects.create(
+        borrower = Borrower.objects.create(
             name='John Doe',
             email='john@example.com',
         )
@@ -97,7 +99,7 @@ class BorrowerModelTests(TestCase):
 
     def test_borrower_email_is_stored_lowercase(self):
         """Test a mixed-case email is stored in lowercase."""
-        borrower = models.Borrower.objects.create(
+        borrower = Borrower.objects.create(
             name='John Doe',
             email='John.Doe@Example.COM',
         )
@@ -106,7 +108,7 @@ class BorrowerModelTests(TestCase):
 
     def test_borrower_name_and_email_are_trimmed(self):
         """Test surrounding whitespace is stripped from borrower fields."""
-        borrower = models.Borrower.objects.create(
+        borrower = Borrower.objects.create(
             name='  John Doe  ',
             email='  John.Doe@Example.COM  ',
         )
@@ -118,7 +120,7 @@ class BorrowerModelTests(TestCase):
         """Test full validation rejects blank names and emails."""
         for field in ('name', 'email'):
             with self.subTest(field=field):
-                borrower = models.Borrower(
+                borrower = Borrower(
                     name='John Doe',
                     email='john@example.com',
                 )
@@ -129,7 +131,7 @@ class BorrowerModelTests(TestCase):
 
     def test_invalid_email_is_rejected(self):
         """Test full validation identifies an invalid email."""
-        borrower = models.Borrower(
+        borrower = Borrower(
             name='John Doe',
             email='not-an-email',
         )
@@ -141,14 +143,14 @@ class BorrowerModelTests(TestCase):
 
     def test_duplicate_email_is_rejected(self):
         """Test normalized duplicate emails violate database uniqueness."""
-        models.Borrower.objects.create(
+        Borrower.objects.create(
             name='John Doe',
             email='JOHN@example.com',
         )
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                models.Borrower.objects.create(
+                Borrower.objects.create(
                     name='Another Person',
                     email='john@example.com',
                 )
@@ -159,17 +161,17 @@ class BorrowingModelTests(TestCase):
 
     def test_create_borrowing(self):
         """Test creating a borrowing sets its timestamp and active state."""
-        book = models.Book.objects.create(
+        book = Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=1,
         )
-        borrower = models.Borrower.objects.create(
+        borrower = Borrower.objects.create(
             name='John Doe',
             email='john@example.com',
         )
         before_create = timezone.now()
-        borrowing = models.Borrowing.objects.create(
+        borrowing = Borrowing.objects.create(
             book=book,
             borrower=borrower,
         )
@@ -184,20 +186,20 @@ class BorrowingModelTests(TestCase):
 
     def test_duplicate_active_borrowing_for_same_pair_is_rejected(self):
         """Test the database rejects a duplicate active book/borrower pair."""
-        book = models.Book.objects.create(
+        book = Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=1,
         )
-        borrower = models.Borrower.objects.create(
+        borrower = Borrower.objects.create(
             name='John Doe',
             email='john@example.com',
         )
-        models.Borrowing.objects.create(book=book, borrower=borrower)
+        Borrowing.objects.create(book=book, borrower=borrower)
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                models.Borrowing.objects.create(
+                Borrowing.objects.create(
                     book=book,
                     borrower=borrower,
                 )
@@ -206,59 +208,59 @@ class BorrowingModelTests(TestCase):
         self,
     ):
         """Test distinct book/borrower pairs can be active concurrently."""
-        first_book = models.Book.objects.create(
+        first_book = Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=2,
         )
-        second_book = models.Book.objects.create(
+        second_book = Book.objects.create(
             title='Dune',
             author='Frank Herbert',
             total_quantity=1,
         )
-        first_borrower = models.Borrower.objects.create(
+        first_borrower = Borrower.objects.create(
             name='John Doe',
             email='john@example.com',
         )
-        second_borrower = models.Borrower.objects.create(
+        second_borrower = Borrower.objects.create(
             name='Jane Doe',
             email='jane@example.com',
         )
 
-        models.Borrowing.objects.create(
+        Borrowing.objects.create(
             book=first_book,
             borrower=first_borrower,
         )
-        models.Borrowing.objects.create(
+        Borrowing.objects.create(
             book=first_book,
             borrower=second_borrower,
         )
-        models.Borrowing.objects.create(
+        Borrowing.objects.create(
             book=second_book,
             borrower=first_borrower,
         )
 
-        self.assertEqual(models.Borrowing.objects.count(), 3)
+        self.assertEqual(Borrowing.objects.count(), 3)
 
     def test_borrower_can_borrow_same_book_again_after_return(self):
         """Test a returned book/borrower pair can be borrowed again."""
-        book = models.Book.objects.create(
+        book = Book.objects.create(
             title='Clean Code',
             author='Robert C. Martin',
             total_quantity=1,
         )
-        borrower = models.Borrower.objects.create(
+        borrower = Borrower.objects.create(
             name='John Doe',
             email='john@example.com',
         )
-        first_borrowing = models.Borrowing.objects.create(
+        first_borrowing = Borrowing.objects.create(
             book=book,
             borrower=borrower,
         )
         first_borrowing.returned_at = timezone.now()
         first_borrowing.save(update_fields=['returned_at'])
 
-        second_borrowing = models.Borrowing.objects.create(
+        second_borrowing = Borrowing.objects.create(
             book=book,
             borrower=borrower,
         )
@@ -266,7 +268,7 @@ class BorrowingModelTests(TestCase):
         self.assertIsNotNone(first_borrowing.returned_at)
         self.assertIsNone(second_borrowing.returned_at)
         self.assertEqual(
-            models.Borrowing.objects.filter(
+            Borrowing.objects.filter(
                 book=book,
                 borrower=borrower,
             ).count(),
@@ -282,16 +284,16 @@ class BorrowingModelTests(TestCase):
                     if is_returned else 'john@example.com'
                 )
                 book_title = 'Returned Code' if is_returned else 'Clean Code'
-                book = models.Book.objects.create(
+                book = Book.objects.create(
                     title=book_title,
                     author='Robert C. Martin',
                     total_quantity=1,
                 )
-                borrower = models.Borrower.objects.create(
+                borrower = Borrower.objects.create(
                     name='John Doe',
                     email=borrower_email,
                 )
-                borrowing = models.Borrowing.objects.create(
+                borrowing = Borrowing.objects.create(
                     book=book,
                     borrower=borrower,
                 )
@@ -311,16 +313,16 @@ class BorrowingModelTests(TestCase):
                     if is_returned else 'john@example.com'
                 )
                 book_title = 'Returned Code' if is_returned else 'Clean Code'
-                book = models.Book.objects.create(
+                book = Book.objects.create(
                     title=book_title,
                     author='Robert C. Martin',
                     total_quantity=1,
                 )
-                borrower = models.Borrower.objects.create(
+                borrower = Borrower.objects.create(
                     name='John Doe',
                     email=borrower_email,
                 )
-                borrowing = models.Borrowing.objects.create(
+                borrowing = Borrowing.objects.create(
                     book=book,
                     borrower=borrower,
                 )

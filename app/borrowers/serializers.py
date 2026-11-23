@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from core.models import Borrower
+from borrowers.models import Borrower
 
 
 class BorrowerConflict(APIException):

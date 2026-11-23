@@ -6,7 +6,7 @@ from rest_framework import generics, status
 from rest_framework.exceptions import APIException, ValidationError
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 
-from core.models import Book
+from books.models import Book
 from books.serializers import BookReadSerializer, BookWriteSerializer
 
 

@@ -1,6 +1,6 @@
 from rest_framework import generics
 
-from core.models import Borrower
+from borrowers.models import Borrower
 from borrowers.serializers import BorrowerSerializer
 
 
